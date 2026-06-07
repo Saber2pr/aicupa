@@ -276,13 +276,31 @@
             <div class="hero-preview__orbit" aria-hidden="true"></div>
             <div class="hero-preview__card">
               <div class="hero-preview__stage">
-                <img
-                  class="hero-preview__image"
-                  src="https://cdn.jsdelivr.net/gh/saber2pr/vsc-ext-todolist@master/assets/todolist-web-preview.webp"
-                  alt="Todo List app preview showing hierarchical task tree with AI agent chat"
-                  loading="eager"
-                  decoding="async"
-                />
+                <div class="hero-preview__media">
+                  <img
+                    class="hero-preview__image hero-preview__image--poster"
+                    src="https://cdn.jsdelivr.net/gh/saber2pr/vsc-ext-todolist@master/assets/todolist-web-preview.webp"
+                    alt="Todo List app preview showing hierarchical task tree with AI agent chat"
+                    loading="eager"
+                    decoding="async"
+                  />
+                  <video
+                    class="hero-preview__image hero-preview__video"
+                    muted
+                    loop
+                    playsinline
+                    preload="none"
+                    data-src="https://saber2pr.top/todolist-resources/Getting_Started_with_AI_Todo_Generator.mp4"
+                    aria-label="AI Todo Generator getting started preview video"
+                  ></video>
+                  <button
+                    class="hero-preview__play"
+                    type="button"
+                    aria-label="Play product preview video"
+                  >
+                    <span class="hero-preview__play-icon" aria-hidden="true"></span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

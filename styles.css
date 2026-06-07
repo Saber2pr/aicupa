@@ -481,6 +481,12 @@ a.btn--ghost:focus-visible {
   background: transparent;
 }
 
+.hero-preview__media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .hero-preview__image {
   position: relative;
   z-index: 1;
@@ -490,6 +496,94 @@ a.btn--ghost:focus-visible {
   object-fit: contain;
   object-position: right top;
   filter: saturate(1.03) contrast(1.02);
+}
+
+.hero-preview__image--poster {
+  transition: opacity 220ms var(--ease-standard);
+}
+
+.hero-preview__video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  cursor: pointer;
+  object-fit: cover;
+  object-position: center;
+  transition: opacity 220ms var(--ease-standard);
+}
+
+.hero-preview__play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border: 1px solid rgba(214, 235, 253, 0.55);
+  border-radius: 999px;
+  background: rgba(10, 12, 20, 0.68);
+  color: var(--near-white);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.96);
+  transition: opacity 180ms var(--ease-standard),
+    transform 180ms var(--ease-standard),
+    border-color 180ms var(--ease-standard),
+    background-color 180ms var(--ease-standard);
+}
+
+.hero-preview__play-icon {
+  margin-left: 0.15rem;
+  width: 0;
+  height: 0;
+  border-top: 0.5rem solid transparent;
+  border-bottom: 0.5rem solid transparent;
+  border-left: 0.8rem solid currentColor;
+}
+
+.hero-preview__media:hover .hero-preview__play,
+.hero-preview__media:focus-within .hero-preview__play {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.hero-preview__play:hover,
+.hero-preview__play:focus-visible {
+  border-color: rgba(214, 235, 253, 0.85);
+  background: rgba(10, 12, 20, 0.86);
+}
+
+.hero-preview__media.is-playing .hero-preview__image--poster {
+  opacity: 0;
+}
+
+.hero-preview__media.is-playing .hero-preview__video {
+  opacity: 1;
+}
+
+.hero-preview__media.is-playing .hero-preview__play {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hero-preview__media.is-playing.is-paused .hero-preview__play {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .hero-preview__play {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .hero-preview__stage::before {
