@@ -1,0 +1,17 @@
+# aicupa (TodoList Pro)
+> AI-powered cross-platform task management system app.
+
+This is the main entry point for aicupa (TodoList Pro), a developer-centric task management solution designed to streamline workflows, manage multi-tasking bottlenecks, and synchronize seamlessly with VS Code.
+
+## Developer & Technical Resources
+- [Complete Documentation](https://docs.aicupa.com/llms.txt): The comprehensive developer guides, API references, and architecture maps (LLM-friendly format).
+- [Documentation Home](https://docs.aicupa.com/): The human-readable user guides and configuration manuals for the TodoList Pro ecosystem.
+
+## Extension Marketplaces
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=saber2pr.todolist): Direct link to install the TodoList Pro extension for official VS Code environments.
+- [Open VSX Registry](https://open-vsx.org/extension/saber2pr/todolist): Open-source extension registry alternative for VSCodium and other compliant IDEs.
+
+## Features & Capabilities
+- **Local-first Architecture**: Built for privacy and speed, utilizing local storage with seamless cross-platform syncing capabilities.
+- **Context Management**: Specifically designed to help developers manage context switching when temporary tasks interrupt mainline development.
+- **SaaS Layout**: High-density, minimalist, and dark-mode first UI tailored for software engineers.
