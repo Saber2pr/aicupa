@@ -129,12 +129,55 @@ async function handleSignedIn(clerk) {
   }
 }
 
+function isRefreshMode() {
+  return new URLSearchParams(window.location.search).get('mode') === 'refresh';
+}
+
+function sendToParent(token, userId, email) {
+  if (window.parent && window.parent !== window) {
+    try {
+      window.parent.postMessage({
+        type: 'aicupa-auth-callback',
+        token: token,
+        userId: userId,
+        email: email,
+      }, '*');
+    } catch (e) { /* ignore */ }
+  }
+}
+
+async function silentRefresh(clerk) {
+  if (!clerk.session) {
+    sendToParent(null, null, null);
+    sendToOpener(null, null, null);
+    return;
+  }
+  var token = null;
+  try { token = await clerk.session.getToken({ template: 'supabase' }); } catch (e) { /* ignore */ }
+  var userId = clerk.user ? clerk.user.id : null;
+  var email = '';
+  if (clerk.user) {
+    if (clerk.user.primaryEmailAddress) {
+      email = clerk.user.primaryEmailAddress.emailAddress;
+    } else if (clerk.user.emailAddresses && clerk.user.emailAddresses.length > 0) {
+      email = clerk.user.emailAddresses[0].emailAddress;
+    }
+  }
+  sendToParent(token, userId, email);
+  sendToOpener(token, userId, email);
+}
+
 async function init() {
   try {
     var clerk = await waitForClerk(15000);
 
     if (typeof clerk.load === 'function') {
       await clerk.load();
+    }
+
+    if (isRefreshMode()) {
+      await silentRefresh(clerk);
+      return;
     }
 
     if (clerk.user && clerk.session) {
@@ -163,7 +206,11 @@ async function init() {
       }
     });
   } catch (err) {
-    setStatus('Error: ' + (err.message || err), '#ff6b6b');
+    if (isRefreshMode()) {
+      sendToParent(null, null, null);
+    } else {
+      setStatus('Error: ' + (err.message || err), '#ff6b6b');
+    }
   }
 }
 
