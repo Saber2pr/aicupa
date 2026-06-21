@@ -35,7 +35,12 @@
     color: #888;
   }
   .success-view { text-align: center; padding: 32px 0; }
-  .success-icon { font-size: 48px; margin-bottom: 16px; }
+  .success-icon {
+    width: 48px; height: 48px; margin: 0 auto 16px;
+    background: rgba(34,197,94,0.15); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #4ade80; font-size: 24px;
+  }
   .success-text { font-size: 15px; font-weight: 500; color: #4ade80; margin-bottom: 8px; }
   .success-sub { font-size: 12px; color: #888; }
 </style>
@@ -43,45 +48,57 @@
 <body>
 <div class="card">
   <div id="clerk-mount"></div>
-  <div id="status"></div>
+  <div id="status">Loading...</div>
 </div>
 
-<script>
-var CLERK_PUB_KEY = 'pk_live_Y2xlcmsuYWljdXBhLmNvbSQ';
-var CLERK_JS_URL = 'https://clerk.aicupa.com/npm/@clerk/clerk-js@latest/dist/clerk.browser.js';
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_live_Y2xlcmsuYWljdXBhLmNvbSQ"
+  src="https://clerk.aicupa.com/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+></script>
 
+<script>
 var statusEl = document.getElementById('status');
+
 function setStatus(text, color) {
   statusEl.textContent = text;
   statusEl.style.color = color || '#888';
 }
 
-function sendTokenToOpener(token, userId, email) {
-  var payload = {
-    type: 'aicupa-auth-callback',
-    token: token,
-    userId: userId,
-    email: email,
-  };
+function waitForClerk(timeout) {
+  var deadline = Date.now() + (timeout || 15000);
+  return new Promise(function (resolve, reject) {
+    (function check() {
+      if (window.Clerk) return resolve(window.Clerk);
+      if (Date.now() > deadline) return reject(new Error('Clerk load timeout'));
+      setTimeout(check, 100);
+    })();
+  });
+}
+
+function sendToOpener(token, userId, email) {
   if (window.opener) {
     try {
-      window.opener.postMessage(payload, '*');
+      window.opener.postMessage({
+        type: 'aicupa-auth-callback',
+        token: token,
+        userId: userId,
+        email: email,
+      }, '*');
     } catch (e) { /* ignore */ }
   }
-  showSuccess(email);
 }
 
 function showSuccess(email) {
   var mount = document.getElementById('clerk-mount');
-  mount.innerHTML = '';
-  var div = document.createElement('div');
-  div.className = 'success-view';
-  div.innerHTML =
-    '<div class="success-icon">&#10003;</div>' +
-    '<div class="success-text">Signed in successfully!</div>' +
-    '<div class="success-sub">' + (email || '') + '</div>';
-  mount.appendChild(div);
-  setStatus('You can close this window now.', '#4ade80');
+  mount.innerHTML =
+    '<div class="success-view">' +
+      '<div class="success-icon">&#10003;</div>' +
+      '<div class="success-text">Signed in successfully!</div>' +
+      '<div class="success-sub">' + (email || '') + '</div>' +
+    '</div>';
+  setStatus('This window will close automatically...', '#4ade80');
   setTimeout(function () { window.close(); }, 2000);
 }
 
@@ -99,77 +116,55 @@ async function handleSignedIn(clerk) {
   setStatus('Getting token...', '#7c6af7');
 
   var token = null;
-  try {
-    token = await clerk.session.getToken({ template: 'supabase' });
-  } catch (e) { /* ignore */ }
-
+  try { token = await clerk.session.getToken({ template: 'supabase' }); } catch (e) { /* ignore */ }
   if (!token) {
     try { token = await clerk.session.getToken(); } catch (e) { /* ignore */ }
   }
 
   if (token) {
-    sendTokenToOpener(token, userId, email);
+    sendToOpener(token, userId, email);
+    showSuccess(email);
   } else {
     setStatus('Failed to get token', '#ff6b6b');
   }
 }
 
 async function init() {
-  setStatus('Loading...', '#888');
+  try {
+    var clerk = await waitForClerk(15000);
 
-  var script = document.createElement('script');
-  script.src = CLERK_JS_URL;
-  script.async = true;
-  script.crossOrigin = 'anonymous';
-
-  script.onload = async function () {
-    try {
-      var clerk;
-      if (typeof window.Clerk === 'function') {
-        clerk = new window.Clerk(CLERK_PUB_KEY);
-      } else if (window.Clerk && typeof window.Clerk.load === 'function') {
-        clerk = window.Clerk;
-      } else {
-        throw new Error('Clerk not found');
-      }
+    if (typeof clerk.load === 'function') {
       await clerk.load();
-
-      if (clerk.user && clerk.session) {
-        await handleSignedIn(clerk);
-        return;
-      }
-
-      setStatus('');
-      var mountEl = document.getElementById('clerk-mount');
-      clerk.mountSignIn(mountEl, {
-        appearance: {
-          variables: {
-            colorBackground: '#1a1a1a',
-            colorText: '#e5e5e5',
-            colorTextSecondary: '#999',
-            colorPrimary: '#7c6af7',
-            colorInputBackground: '#111',
-            colorInputText: '#e5e5e5',
-            borderRadius: '10px',
-          },
-        },
-      });
-
-      clerk.addListener(function (resources) {
-        if (resources.session && resources.user) {
-          handleSignedIn(clerk);
-        }
-      });
-    } catch (err) {
-      setStatus('Error: ' + (err.message || err), '#ff6b6b');
     }
-  };
 
-  script.onerror = function () {
-    setStatus('Failed to load Clerk', '#ff6b6b');
-  };
+    if (clerk.user && clerk.session) {
+      await handleSignedIn(clerk);
+      return;
+    }
 
-  document.head.appendChild(script);
+    setStatus('');
+    clerk.mountSignIn(document.getElementById('clerk-mount'), {
+      appearance: {
+        variables: {
+          colorBackground: '#1a1a1a',
+          colorText: '#e5e5e5',
+          colorTextSecondary: '#999',
+          colorPrimary: '#7c6af7',
+          colorInputBackground: '#111',
+          colorInputText: '#e5e5e5',
+          borderRadius: '10px',
+        },
+      },
+    });
+
+    clerk.addListener(function (resources) {
+      if (resources.session && resources.user) {
+        handleSignedIn(clerk);
+      }
+    });
+  } catch (err) {
+    setStatus('Error: ' + (err.message || err), '#ff6b6b');
+  }
 }
 
 init();
