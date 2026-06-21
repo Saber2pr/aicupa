@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — Aicupa</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    color: #e5e5e5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    padding: 24px 20px;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    margin: 16px;
+  }
+  #clerk-mount { min-height: 200px; }
+  #clerk-mount .cl-rootBox { width: 100% !important; }
+  #clerk-mount .cl-card { background: transparent !important; box-shadow: none !important; border: none !important; }
+  #status {
+    text-align: center;
+    font-size: 13px;
+    margin-top: 12px;
+    min-height: 24px;
+    color: #888;
+  }
+  .success-view { text-align: center; padding: 32px 0; }
+  .success-icon { font-size: 48px; margin-bottom: 16px; }
+  .success-text { font-size: 15px; font-weight: 500; color: #4ade80; margin-bottom: 8px; }
+  .success-sub { font-size: 12px; color: #888; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="clerk-mount"></div>
+  <div id="status"></div>
+</div>
+
+<script>
+var CLERK_PUB_KEY = 'pk_live_Y2xlcmsuYWljdXBhLmNvbSQ';
+var CLERK_JS_URL = 'https://clerk.aicupa.com/npm/@clerk/clerk-js@latest/dist/clerk.browser.js';
+
+var statusEl = document.getElementById('status');
+function setStatus(text, color) {
+  statusEl.textContent = text;
+  statusEl.style.color = color || '#888';
+}
+
+function sendTokenToOpener(token, userId, email) {
+  var payload = {
+    type: 'aicupa-auth-callback',
+    token: token,
+    userId: userId,
+    email: email,
+  };
+  if (window.opener) {
+    try {
+      window.opener.postMessage(payload, '*');
+    } catch (e) { /* ignore */ }
+  }
+  showSuccess(email);
+}
+
+function showSuccess(email) {
+  var mount = document.getElementById('clerk-mount');
+  mount.innerHTML = '';
+  var div = document.createElement('div');
+  div.className = 'success-view';
+  div.innerHTML =
+    '<div class="success-icon">&#10003;</div>' +
+    '<div class="success-text">Signed in successfully!</div>' +
+    '<div class="success-sub">' + (email || '') + '</div>';
+  mount.appendChild(div);
+  setStatus('You can close this window now.', '#4ade80');
+  setTimeout(function () { window.close(); }, 2000);
+}
+
+async function handleSignedIn(clerk) {
+  if (!clerk.session || !clerk.user) return;
+
+  var userId = clerk.user.id;
+  var email = '';
+  if (clerk.user.primaryEmailAddress) {
+    email = clerk.user.primaryEmailAddress.emailAddress;
+  } else if (clerk.user.emailAddresses && clerk.user.emailAddresses.length > 0) {
+    email = clerk.user.emailAddresses[0].emailAddress;
+  }
+
+  setStatus('Getting token...', '#7c6af7');
+
+  var token = null;
+  try {
+    token = await clerk.session.getToken({ template: 'supabase' });
+  } catch (e) { /* ignore */ }
+
+  if (!token) {
+    try { token = await clerk.session.getToken(); } catch (e) { /* ignore */ }
+  }
+
+  if (token) {
+    sendTokenToOpener(token, userId, email);
+  } else {
+    setStatus('Failed to get token', '#ff6b6b');
+  }
+}
+
+async function init() {
+  setStatus('Loading...', '#888');
+
+  var script = document.createElement('script');
+  script.src = CLERK_JS_URL;
+  script.async = true;
+  script.crossOrigin = 'anonymous';
+
+  script.onload = async function () {
+    try {
+      var clerk;
+      if (typeof window.Clerk === 'function') {
+        clerk = new window.Clerk(CLERK_PUB_KEY);
+      } else if (window.Clerk && typeof window.Clerk.load === 'function') {
+        clerk = window.Clerk;
+      } else {
+        throw new Error('Clerk not found');
+      }
+      await clerk.load();
+
+      if (clerk.user && clerk.session) {
+        await handleSignedIn(clerk);
+        return;
+      }
+
+      setStatus('');
+      var mountEl = document.getElementById('clerk-mount');
+      clerk.mountSignIn(mountEl, {
+        appearance: {
+          variables: {
+            colorBackground: '#1a1a1a',
+            colorText: '#e5e5e5',
+            colorTextSecondary: '#999',
+            colorPrimary: '#7c6af7',
+            colorInputBackground: '#111',
+            colorInputText: '#e5e5e5',
+            borderRadius: '10px',
+          },
+        },
+      });
+
+      clerk.addListener(function (resources) {
+        if (resources.session && resources.user) {
+          handleSignedIn(clerk);
+        }
+      });
+    } catch (err) {
+      setStatus('Error: ' + (err.message || err), '#ff6b6b');
+    }
+  };
+
+  script.onerror = function () {
+    setStatus('Failed to load Clerk', '#ff6b6b');
+  };
+
+  document.head.appendChild(script);
+}
+
+init();
+</script>
+</body>
+</html>
