@@ -1,0 +1,19 @@
+auth.html
+  s_6139dde0f4d287::t_ca3f54de5fec2a 132-169,178-182,209-213
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "d75113f146eb5b1aa94d72b90e6854e7aa36aebf",
+  "prompts": {},
+  "sessions": {
+    "s_6139dde0f4d287": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f0cdb15b-c34d-4338-87ea-ad61e6d7d0b6",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "muhai <muhai.li@tuya.com>"
+    }
+  }
+}
