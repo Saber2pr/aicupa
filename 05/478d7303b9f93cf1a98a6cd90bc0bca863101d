@@ -1,0 +1,14 @@
+index.html
+  h_eabc34dcaf7833 277,447-448,769
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "05478d7303b9f93cf1a98a6cd90bc0bca863101d",
+  "prompts": {},
+  "humans": {
+    "h_eabc34dcaf7833": {
+      "author": "muhai <muhai.li@tuya.com>"
+    }
+  }
+}
